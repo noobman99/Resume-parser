@@ -31,13 +31,13 @@ def process_zip():
 
     if zip_file:
         try:
+            unique_id = str(uuid.uuid4())
+
             # Save the zip file temporarily
             zip_file_path = os.path.join(
-                app.config["UPLOAD_FOLDER"], "extracted.zip"
+                app.config["UPLOAD_FOLDER"], f"{unique_id}-extracted.zip"
             )  # Change the path as needed
             zip_file.save(zip_file_path)
-
-            unique_id = str(uuid.uuid4())
 
             # Extract the zip file
             with zipfile.ZipFile(zip_file, "r") as zip_ref:

@@ -3,6 +3,8 @@ import textract
 from upload_to_excel import upload_to_excel
 import os
 
+import doc2docx
+
 
 def extract_text_from_resume(pdf_file: str) -> str:
     return textract.process(pdf_file).decode("utf-8")
@@ -37,18 +39,36 @@ def process_files(folder: str, output_file: str):
         for folders in os.listdir(folder):
             if os.path.isdir(f"{folder}/{folders}"):
                 for file in os.listdir(f"{folder}/{folders}"):
-                    print(file)
-                    file_name = os.path.join(f"{folder}/{folders}", file)
-                    text = extract_text_from_resume(file_name)
-                    contact_info = extract_contact_info(text)
-                    data.append(
-                        [
-                            file,
-                            contact_info.get("email", ""),
-                            contact_info.get("phone", ""),
-                            text.replace("\r", "").replace("\n", " ").replace("\f", ""),
-                        ]
-                    )
+                    if file.endswith(".doc"):
+                        doc2docx.convert(
+                            os.path.join(f"{folder}/{folders}", file),
+                            os.path.join(
+                                f"{folder}/{folders}", file.replace(".doc", ".docx")
+                            ),
+                        )
+                        os.remove(os.path.join(f"{folder}/{folders}", file))
+
+        for folders in os.listdir(folder):
+            if os.path.isdir(f"{folder}/{folders}"):
+                for file in os.listdir(f"{folder}/{folders}"):
+                    print(f"Processing file: {file}")
+                    try:
+                        file_name = os.path.join(f"{folder}/{folders}", file)
+                        text = extract_text_from_resume(file_name)
+                        contact_info = extract_contact_info(text)
+                        data.append(
+                            [
+                                file,
+                                contact_info.get("email", ""),
+                                contact_info.get("phone", ""),
+                                text.replace("\r", "")
+                                .replace("\n", " ")
+                                .replace("\f", ""),
+                            ]
+                        )
+                    except Exception as e:
+                        data.append([file, "", "", "The file format was incorrect"])
+
     except Exception as e:
         print(f"An error occurred while parsing pdf: {str(e)}")
         raise e
